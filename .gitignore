@@ -1,0 +1,9 @@
+/*
+!.gitignore
+!/modules
+/modules/*
+!/modules/shop
+/modules/shop/*
+!/modules/shop/item
+/modules/shop/item/*
+!/modules/shop/item/propertiesobserver.php
