@@ -2,8 +2,10 @@
 !.gitignore
 !/modules
 /modules/*
-!/modules/shop
-/modules/shop/*
-!/modules/shop/item
-/modules/shop/item/*
-!/modules/shop/item/propertiesobserver.php
+!/modules/core
+/modules/core/*
+!/modules/core/entity
+/modules/core/entity/*
+!/modules/core/entity/observer
+/modules/core/entity/observer/*
+!/modules/core/entity/observer/properties.php
