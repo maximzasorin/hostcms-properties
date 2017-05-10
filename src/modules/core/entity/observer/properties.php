@@ -22,13 +22,13 @@ class Core_Entity_Observer_Properties
 	 *
 	 * @return void
 	 */
-	static public function attachObservers()
+	static public function attach()
 	{
 		foreach (self::$_aEntities as $entity)
 		{
-			Core_Event::attach($entity . '.onCallget', array(get_class(self), 'onCallget'));
-			Core_Event::attach($entity . '.onCallgetAll', array(get_class(self), 'onCallgetAll'));
-			Core_Event::attach($entity . '.onCallset', array(get_class(self), 'onCallset'));
+			Core_Event::attach($entity . '.onCallget', array(__CLASS__, 'onCallget'));
+			Core_Event::attach($entity . '.onCallgetAll', array(__CLASS__, 'onCallgetAll'));
+			Core_Event::attach($entity . '.onCallset', array(__CLASS__, 'onCallset'));
 		}
 	}
 
@@ -120,15 +120,64 @@ class Core_Entity_Observer_Properties
 		// Находим все значения доп. свойств
 		$aoPropertyValues = $oCoreEntity->getPropertyValues($bCache, $aPropertyIds);
 
+		usort($aoPropertyValues, function ($a, $b) {
+			return $a->id >= $b->id ? 1 : -1;
+		});
+
 		// Составляем массив из значений
 		$aValues = array();
 
 		foreach ($aoPropertyValues as $oPropertyValue)
 		{
-			$aValues[] = $oPropertyValue->value;
+			$aValues[] = self::_getPropertyValue($oPropertyValue);
 		}
 
 		return $aValues;
+	}
+
+	/**
+	 * Возвращает значение доп. свойства.
+	 *
+	 * @param  Core_Entity  $oPropertyValue
+	 * @return mixed
+	 */
+	static protected function _getPropertyValue(Core_Entity $oPropertyValue)
+	{
+		switch (get_class($oPropertyValue))
+		{
+			case 'Property_Value_Int_Model':
+				if (Core::moduleIsActive('list') && $oPropertyValue->Property->type == 3)
+				{
+					if ($oPropertyValue->value != 0)
+					{
+						$oListItem = $oPropertyValue->List_Item;
+
+						if ($oListItem->id)
+						{
+							return $oListItem->value;
+						}
+					}
+				}
+
+				return intval($oPropertyValue->value);
+			break;
+
+			case 'Property_Value_Datetime_Model':
+			case 'Property_Value_Float_Model':
+			case 'Property_Value_String_Model':
+			case 'Property_Value_Text_Model':
+				return $oPropertyValue->value;
+			break;
+
+			case 'Property_Value_File_Model':
+				return array(
+					'large' => $oPropertyValue->image_large,
+					'small' =>$oPropertyValue->image_small
+				);
+			break;
+		}
+
+		return NULL;
 	}
 
 	/**

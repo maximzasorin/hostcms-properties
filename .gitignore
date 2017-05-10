@@ -1,11 +1,3 @@
-/*
-!.gitignore
-!/modules
-/modules/*
-!/modules/core
-/modules/core/*
-!/modules/core/entity
-/modules/core/entity/*
-!/modules/core/entity/observer
-/modules/core/entity/observer/*
-!/modules/core/entity/observer/properties.php
+/vendor
+composer.lock
+.DS_Store

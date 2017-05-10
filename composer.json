@@ -1,0 +1,44 @@
+{
+    "name": "maximzasorin/hostcms-properties",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Maxim Zasorin",
+            "email": "maximzasorin@gmail.com"
+        }
+    ],
+    "repositories": {
+       "hostcms-framework": {
+            "type": "package",
+            "package": {
+                "name": "hostcms-projects/hostcms-framework",
+                "version": "6.7.1",
+                "source": {
+                    "url": "https://github.com/hostcms-projects/hostcms-framework",
+                    "type": "git",
+                    "reference": "6.7.1"
+                },
+                "autoload": {
+                    "classmap": ["modules/"]
+                }
+            }
+        },
+        "hostcms-testing": {
+            "type": "git",
+            "url": "git@github.com:hostcms-projects/hostcms-testing.git"
+        }
+    },
+    "require": {
+        "hostcms-projects/hostcms-framework": "*",
+        "hostcms-projects/hostcms-testing": "*"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^6.1"
+    },
+    "autoload": {
+        "classmap": ["src/"]
+    },
+    "autoload-dev": {
+        "classmap": ["tests/"]
+    }
+}
