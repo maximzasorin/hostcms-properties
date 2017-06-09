@@ -95,7 +95,25 @@ class Core_Entity_Observer_Properties
 			? $aoPropertyValues[0]
 			: $oProperty->createNewValue($oCoreEntity->id);
 
-		$oPropertyValue->value = $value;
+		switch ($oProperty->type)
+		{
+			// Инфоэлемент, товар
+			case 5:
+			case 12:
+				$oPropertyValue->value = $value->id;
+			break;
+
+			// Дата, дата-время
+			case 8:
+			case 9:
+				$oPropertyValue->value = Core_Date::timestamp2sql($value);
+			break;
+
+			default:
+				$oPropertyValue->value = $value;
+			break;
+		}
+
 		$oPropertyValue->save();
 
 		return $oCoreEntity;
@@ -143,37 +161,65 @@ class Core_Entity_Observer_Properties
 	 */
 	static protected function _getPropertyValue(Core_Entity $oPropertyValue)
 	{
-		switch (get_class($oPropertyValue))
+		$oProperty = $oPropertyValue->Property;
+
+		switch ($oProperty->type)
 		{
-			case 'Property_Value_Int_Model':
-				if (Core::moduleIsActive('list') && $oPropertyValue->Property->type == 3)
-				{
-					if ($oPropertyValue->value != 0)
-					{
-						$oListItem = $oPropertyValue->List_Item;
-
-						if ($oListItem->id)
-						{
-							return $oListItem->value;
-						}
-					}
-				}
-
+			// Целое число
+			case 0:
 				return intval($oPropertyValue->value);
 			break;
 
-			case 'Property_Value_Datetime_Model':
-			case 'Property_Value_Float_Model':
-			case 'Property_Value_String_Model':
-			case 'Property_Value_Text_Model':
+			// Строка, большое текстовое поле, виз. редактор
+			case 1:
+			case 4:
+			case 6:
+				return strval($oPropertyValue->value);
+			break;
+
+			// Список
+			case 3:
+				// if (Core::moduleIsActive('list'))
+				// {
+				// 	return Core_Entity::factory('List_Item')->getById($oProperty->value);
+				// }
+
+				return NULL;
+			break;
+
+			// Чекбокс
+			case 7:
+				return boolval($oPropertyValue->value);
+			break;
+
+			// Дата, дата-время
+			case 8:
+			case 9:
+				return Core_Date::sql2timestamp($oPropertyValue->value);
+			break;
+
+			// Скрытое поле
+			case 10:
 				return $oPropertyValue->value;
 			break;
 
-			case 'Property_Value_File_Model':
-				return array(
-					'large' => $oPropertyValue->image_large,
-					'small' =>$oPropertyValue->image_small
-				);
+			// Число с плавающей запятой
+			case 11:
+				return floatval($oPropertyValue->value);
+			break;
+
+			// Информационная система
+			case 5:
+				return Core_Entity::factory('Informationsystem_Item')->getById($oPropertyValue->value);
+			break;
+
+			// Товар
+			case 12:
+				return Core_Entity::factory('Shop_Item')->getById($oPropertyValue->value);
+			break;
+
+			case 2:
+				return NULL;
 			break;
 		}
 

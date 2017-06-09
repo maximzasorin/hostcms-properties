@@ -6,6 +6,8 @@
 class Core_Entity_Observer_PropertiesTest extends \PHPUnit\Framework\TestCase
 {
 	/**
+	 * Сайт.
+	 *
 	 * @var Site_Model
 	 */
 	protected $site;
@@ -26,9 +28,9 @@ class Core_Entity_Observer_PropertiesTest extends \PHPUnit\Framework\TestCase
 				'default' => array (
 					'driver' => 'pdo',
 					'host' => 'localhost',
-					'username' => 'hostcms-history',
-					'password' => 'hostcms-history',
-					'database' => 'hostcms-history'
+					'username' => 'hostcms',
+					'password' => 'hostcms',
+					'database' => 'hostcms'
 				)
 			))
 		);
@@ -38,6 +40,7 @@ class Core_Entity_Observer_PropertiesTest extends \PHPUnit\Framework\TestCase
 
 		// 
 		Core_Entity_Observer_Properties::attach();
+
 
 		// Интернет-магазин
 		$oSite = Core_Entity::factory('Site');
@@ -61,74 +64,82 @@ class Core_Entity_Observer_PropertiesTest extends \PHPUnit\Framework\TestCase
 	/**
 	 * Тестирует тип доп. свойства 
 	 *
-	 * @dataProvider dataPropertyType
+	 * @dataProvider dataSimpleProperties
 	 *
 	 * @param  string  $entityName
 	 * @param  string  $propertyType
 	 * @param  array  $aValues
 	 * @return void
 	 */
-	public function testPropertyType($entityName, $propertyType, $aValues)
+	public function testSimpleProperties($entityName, $propertyType, $aRegularValues, $aCustomValues)
 	{
 		$oEntity = $this->createEntity($entityName);
 
 		// defset => customget
 		$oProperty = $this->createProperty($oEntity, $propertyType);
+
 		$oPropertyValue = $oProperty->createNewValue($oEntity->id);
-		$oPropertyValue->value = $aValues[0];
+		$oPropertyValue->value = $aRegularValues[0];
 		$oPropertyValue->save();
 
 		$actualValue = $oEntity->get($oProperty->tag_name);
 
 		$oProperty->delete();
 
-		$this->assertEquals($aValues[0], $actualValue);
+		$this->assertSame($aCustomValues[0], $actualValue);
 
 
 		// defset => customgetAll
 		$oProperty = $this->createProperty($oEntity, $propertyType);
 
 		$oPropertyValue = $oProperty->createNewValue($oEntity->id);
-		$oPropertyValue->value = $aValues[0];
+		$oPropertyValue->value = $aRegularValues[0];
 		$oPropertyValue->save();
 
 		$oPropertyValue = $oProperty->createNewValue($oEntity->id);
-		$oPropertyValue->value = $aValues[1];
+		$oPropertyValue->value = $aRegularValues[1];
 		$oPropertyValue->save();
 
 		$aActualValue = $oEntity->getAll($oProperty->tag_name);
 
 		$oProperty->delete();
 
-		$this->assertEquals(array($aValues[0], $aValues[1]), $aActualValue);
+		$this->assertSame($aCustomValues, $aActualValue);
 
 
 		// customset => customget
 		$oProperty = $this->createProperty($oEntity, $propertyType);
 
-		$oEntity->set($oProperty->tag_name, $aValues[0]);
+		$oEntity->set($oProperty->tag_name, $aCustomValues[0]);
 		$actualValue = $oEntity->get($oProperty->tag_name);
 
-		$this->assertEquals($aValues[0], $actualValue);
+		$this->assertSame($aCustomValues[0], $actualValue);
+
+		$oProperty->delete();
 
 
 		// customset => defget
 		$oProperty = $this->createProperty($oEntity, $propertyType);
 
-		$oEntity->set($oProperty->tag_name, $aValues[0]);
+		$oEntity->set($oProperty->tag_name, $aCustomValues[0]);
 		$aoPropertyValues = $oEntity->getPropertyValues(FALSE, array($oProperty->id));
 
 		$this->assertTrue(count($aoPropertyValues) == 1);
-		$this->assertEquals($aValues[0], $aoPropertyValues[0]->value);
+		$this->assertEquals($aRegularValues[0], $aoPropertyValues[0]->value);
+
+		$oProperty->delete();
 
 
 		// customset => customgetAll
 		$oProperty = $this->createProperty($oEntity, $propertyType);
 
-		$oEntity->set($oProperty->tag_name, $aValues[0]);
+		$oEntity->set($oProperty->tag_name, $aCustomValues[0]);
 		$aActualValue = $oEntity->getAll($oProperty->tag_name);
 
-		$this->assertEquals(array($aValues[0]), $aActualValue);
+		$this->assertTrue(count($aActualValue) == 1);
+		$this->assertSame(array($aCustomValues[0]), $aActualValue);
+
+		$oProperty->delete();
 	}
 
 	/**
@@ -136,10 +147,122 @@ class Core_Entity_Observer_PropertiesTest extends \PHPUnit\Framework\TestCase
 	 *
 	 * @return array
 	 */
-	public function dataPropertyType()
+	public function dataSimpleProperties()
+	{
+		$now = strtotime('now');
+		$nowSql = date('Y-m-d H:i:s', $now);
+
+		$next = strtotime('+1 day');
+		$nextSql = date('Y-m-d H:i:s', $next);
+
+		return array(
+			array('Shop_Item', 0, array(1337, 1336), array(1337, 1336)),
+			array('Shop_Item', 1, array('one string', ''), array('one string', '')),
+			array('Shop_Item', 4, array('one string', ''), array('one string', '')),
+			array('Shop_Item', 6, array('one string', ''), array('one string', '')),
+			array('Shop_Item', 7, array(TRUE, FALSE), array(TRUE, FALSE)),
+			array('Shop_Item', 8, array($nowSql, $nextSql), array($now, $next)),
+			array('Shop_Item', 9, array($nowSql, $nextSql), array($now, $next)),
+			array('Shop_Item', 10, array('1337', 'one string'), array('1337', 'one string')),
+			array('Shop_Item', 11, array(1337.0, 1336.0), array(1337.0, 1336.0)),
+		);
+	}
+
+	/**
+	 * 
+	 *
+	 * @dataProvider dataRelationProperties
+	 */
+	public function testRelationProperties($entityName, $propertyId, $propertyEntityName)
+	{
+		$oEntity = $this->createEntity($entityName);
+
+		$oPropertyEntity = $this->createEntity($propertyEntityName);
+		$oPropertyEntity2 = $this->createEntity($propertyEntityName);
+
+
+		// defset => customget
+		$oProperty = $this->createProperty($oEntity, $propertyId);
+
+		$oPropertyValue = $oProperty->createNewValue($oEntity->id);
+		$oPropertyValue->value = $oPropertyEntity->id;
+		$oPropertyValue->save();
+
+		$oActualValue = $oEntity->get($oProperty->tag_name);
+
+		$this->assertEquals($oPropertyEntity->id, $oActualValue->id);
+
+		$oProperty->delete();
+
+
+		// defset => customgetAll
+		$oProperty = $this->createProperty($oEntity, $propertyId);
+
+		$oPropertyValue = $oProperty->createNewValue($oEntity->id);
+		$oPropertyValue->value = $oPropertyEntity->id;
+		$oPropertyValue->save();
+
+		$oPropertyValue = $oProperty->createNewValue($oEntity->id);
+		$oPropertyValue->value = $oPropertyEntity2->id;
+		$oPropertyValue->save();
+
+		$aoActualValues = $oEntity->getAll($oProperty->tag_name);
+
+		$this->assertSame($oPropertyEntity->id, $aoActualValues[0]->id);
+		$this->assertSame($oPropertyEntity2->id, $aoActualValues[1]->id);
+		
+		$oProperty->delete();
+
+
+		// customset => customget
+		$oProperty = $this->createProperty($oEntity, $propertyId);
+
+		$oEntity->set($oProperty->tag_name, $oPropertyEntity);
+		$oActualValue = $oEntity->get($oProperty->tag_name);
+
+		$this->assertSame($oPropertyEntity->id, $oActualValue->id);
+
+		$oProperty->delete();
+
+
+		// customset => defget
+		$oProperty = $this->createProperty($oEntity, $propertyId);
+
+		$oEntity->set($oProperty->tag_name, $oPropertyEntity);
+		$aoPropertyValues = $oEntity->getPropertyValues(FALSE, array($oProperty->id));
+
+		$this->assertTrue(count($aoPropertyValues) == 1);
+		$this->assertEquals($oPropertyEntity->id, $aoPropertyValues[0]->value);
+
+		$oProperty->delete();
+
+
+		// customset => customgetAll
+		$oProperty = $this->createProperty($oEntity, $propertyId);
+
+		$oEntity->set($oProperty->tag_name, $oPropertyEntity);
+		$aoActualValues = $oEntity->getAll($oProperty->tag_name);
+
+		$this->assertTrue(count($aoActualValues) == 1);
+		$this->assertEquals($oPropertyEntity->id, $aoActualValues[0]->id);
+
+		$oProperty->delete();
+
+
+		$oPropertyEntity->delete();
+		$oPropertyEntity2->delete();
+	}
+
+	/**
+	 * 
+	 *
+	 * @return
+	 */
+	public function dataRelationProperties()
 	{
 		return array(
-			array('Shop_Item', 0, array(1337, 1336)),
+			array('Shop_Item', 5, 'Informationsystem_Item'),
+			array('Shop_Item', 12, 'Shop_Item'),
 		);
 	}
 
@@ -167,6 +290,21 @@ class Core_Entity_Observer_PropertiesTest extends \PHPUnit\Framework\TestCase
 				$oShopItem->add($oShop);
 
 				return $oShopItem;
+			break;
+
+			case 'Informationsystem_Item':
+				$oInformationsystem = Core_Entity::factory('Informationsystem');
+				$oInformationsystem->name = 'test informationsystem';
+				$oInformationsystem->add($this->site);
+
+				// Создадим информационный элемент
+				$oInformationsystemItem = Core_Entity::factory('Informationsystem_Item');
+				$oInformationsystemItem->datetime = Core_Date::timestamp2sql(date('now'));
+				$oInformationsystemItem->start_datetime = Core_Date::timestamp2sql(date('now'));
+				$oInformationsystemItem->end_datetime = Core_Date::timestamp2sql(date('now'));
+				$oInformationsystemItem->add($oInformationsystem);
+
+				return $oInformationsystemItem;
 			break;
 		}
 
