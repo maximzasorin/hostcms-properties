@@ -3,7 +3,7 @@
 /**
  * Тест для класса Core_Entity_Observer_Properties.
  */
-class Core_Entity_Observer_PropertiesTest extends \PHPUnit\Framework\TestCase
+class Core_Entity_Observer_PropertiesTest extends PHPUnit_Framework_TestCase
 {
 	/**
 	 * Сайт.
@@ -38,7 +38,7 @@ class Core_Entity_Observer_PropertiesTest extends \PHPUnit\Framework\TestCase
 		// Инциализируем ядро
 		Testing_Core::init();
 
-		// 
+		// Прикрпеляем наблюдатель
 		Core_Entity_Observer_Properties::attach();
 
 
@@ -62,7 +62,7 @@ class Core_Entity_Observer_PropertiesTest extends \PHPUnit\Framework\TestCase
 	}
 
 	/**
-	 * Тестирует тип доп. свойства 
+	 * Тестирует доп. свойства базовых типов.
 	 *
 	 * @dataProvider dataSimpleProperties
 	 *
@@ -169,9 +169,14 @@ class Core_Entity_Observer_PropertiesTest extends \PHPUnit\Framework\TestCase
 	}
 
 	/**
-	 * 
+	 * Тестирует доп. свойства типа Интернет-магазин и Информационная система.
 	 *
 	 * @dataProvider dataRelationProperties
+	 *
+	 * @param  string  $entityName
+	 * @param  integer  $propertyId
+	 * @param  string  $propertyEntityName
+	 * @return void
 	 */
 	public function testRelationProperties($entityName, $propertyId, $propertyEntityName)
 	{

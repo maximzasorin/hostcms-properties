@@ -13,8 +13,7 @@ class Core_Entity_Observer_Properties
 	 * @var array
 	 */
 	static protected $_aEntities = array(
-		'shop_item',
-		'shop_group',
+		'shop_item'
 	);
 
 	/**

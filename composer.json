@@ -8,32 +8,21 @@
         }
     ],
     "repositories": {
-       "hostcms-framework": {
-            "type": "package",
-            "package": {
-                "name": "hostcms-projects/hostcms-framework",
-                "version": "6.7.1",
-                "source": {
-                    "url": "https://github.com/hostcms-projects/hostcms-framework",
-                    "type": "git",
-                    "reference": "6.7.1"
-                },
-                "autoload": {
-                    "classmap": ["modules/"]
-                }
-            }
+        "hostcms-framework": {
+            "type": "git",
+            "url": "git@github.com:maximzasorin/hostcms-framework.git"
         },
         "hostcms-testing": {
             "type": "git",
-            "url": "git@github.com:hostcms-projects/hostcms-testing.git"
+            "url": "git@github.com:maximzasorin/hostcms-testing.git"
         }
     },
     "require": {
-        "hostcms-projects/hostcms-framework": "*",
-        "hostcms-projects/hostcms-testing": "*"
+        "maximzasorin/hostcms-framework": "*",
+        "maximzasorin/hostcms-testing": "*"
     },
     "require-dev": {
-        "phpunit/phpunit": "^6.1"
+        "phpunit/phpunit": "^5.7"
     },
     "autoload": {
         "classmap": ["src/"]
