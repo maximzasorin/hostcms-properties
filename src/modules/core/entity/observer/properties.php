@@ -146,83 +146,74 @@ class Core_Entity_Observer_Properties
 
 		foreach ($aoPropertyValues as $oPropertyValue)
 		{
-			$aValues[] = self::_getPropertyValue($oPropertyValue);
+			$oProperty = $oPropertyValue->Property;
+
+			switch ($oProperty->type)
+			{
+				// Целое число
+				case 0:
+					$aValues[] = intval($oPropertyValue->value);
+				break;
+
+				// Строка, большое текстовое поле, виз. редактор
+				case 1:
+				case 4:
+				case 6:
+					$aValues[] = strval($oPropertyValue->value);
+				break;
+
+				// Список
+				case 3:
+					$aValues[] = NULL;
+
+					// if (Core::moduleIsActive('list'))
+					// {
+					// 	$aValues[] = Core_Entity::factory('List_Item')->getById($oProperty->value);
+					// }
+				break;
+
+				// Чекбокс
+				case 7:
+					$aValues[] = boolval($oPropertyValue->value);
+				break;
+
+				// Дата, дата-время
+				case 8:
+				case 9:
+					$aValues[] = Core_Date::sql2timestamp($oPropertyValue->value);
+				break;
+
+				// Скрытое поле
+				case 10:
+					$aValues[] = $oPropertyValue->value;
+				break;
+
+				// Число с плавающей запятой
+				case 11:
+					$aValues[] = floatval($oPropertyValue->value);
+				break;
+
+				// Информационная система
+				case 5:
+					$aValues[] = Core_Entity::factory('Informationsystem_Item')->getById($oPropertyValue->value);
+				break;
+
+				// Товар
+				case 12:
+					$aValues[] = Core_Entity::factory('Shop_Item')->getById($oPropertyValue->value);
+				break;
+
+				case 2:
+					$aValues[] = NULL;
+				break;
+
+				default:
+					$aValues[] = NULL;
+				break;
+			}
 		}
 
 		return $aValues;
-	}
-
-	/**
-	 * Возвращает значение доп. свойства.
-	 *
-	 * @param  Core_Entity  $oPropertyValue
-	 * @return mixed
-	 */
-	static protected function _getPropertyValue(Core_Entity $oPropertyValue)
-	{
-		$oProperty = $oPropertyValue->Property;
-
-		switch ($oProperty->type)
-		{
-			// Целое число
-			case 0:
-				return intval($oPropertyValue->value);
-			break;
-
-			// Строка, большое текстовое поле, виз. редактор
-			case 1:
-			case 4:
-			case 6:
-				return strval($oPropertyValue->value);
-			break;
-
-			// Список
-			case 3:
-				// if (Core::moduleIsActive('list'))
-				// {
-				// 	return Core_Entity::factory('List_Item')->getById($oProperty->value);
-				// }
-
-				return NULL;
-			break;
-
-			// Чекбокс
-			case 7:
-				return boolval($oPropertyValue->value);
-			break;
-
-			// Дата, дата-время
-			case 8:
-			case 9:
-				return Core_Date::sql2timestamp($oPropertyValue->value);
-			break;
-
-			// Скрытое поле
-			case 10:
-				return $oPropertyValue->value;
-			break;
-
-			// Число с плавающей запятой
-			case 11:
-				return floatval($oPropertyValue->value);
-			break;
-
-			// Информационная система
-			case 5:
-				return Core_Entity::factory('Informationsystem_Item')->getById($oPropertyValue->value);
-			break;
-
-			// Товар
-			case 12:
-				return Core_Entity::factory('Shop_Item')->getById($oPropertyValue->value);
-			break;
-
-			case 2:
-				return NULL;
-			break;
-		}
-
-		return NULL;
 	}
 
 	/**

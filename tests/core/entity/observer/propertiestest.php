@@ -41,8 +41,7 @@ class Core_Entity_Observer_PropertiesTest extends PHPUnit_Framework_TestCase
 		// Прикрпеляем наблюдатель
 		Core_Entity_Observer_Properties::attach();
 
-
-		// Интернет-магазин
+		// Сайт
 		$oSite = Core_Entity::factory('Site');
 		$oSite->name = 'test site';
 		$oSite->admin_email = 'test@example.com';
@@ -84,9 +83,9 @@ class Core_Entity_Observer_PropertiesTest extends PHPUnit_Framework_TestCase
 
 		$actualValue = $oEntity->get($oProperty->tag_name);
 
-		$oProperty->delete();
-
 		$this->assertSame($aCustomValues[0], $actualValue);
+
+		$oProperty->delete();
 
 
 		// defset => customgetAll
@@ -102,9 +101,9 @@ class Core_Entity_Observer_PropertiesTest extends PHPUnit_Framework_TestCase
 
 		$aActualValue = $oEntity->getAll($oProperty->tag_name);
 
-		$oProperty->delete();
-
 		$this->assertSame($aCustomValues, $aActualValue);
+
+		$oProperty->delete();
 
 
 		// customset => customget
@@ -143,7 +142,7 @@ class Core_Entity_Observer_PropertiesTest extends PHPUnit_Framework_TestCase
 	}
 
 	/**
-	 * Возвращает данные для тестов.
+	 * Данные для теста базовых доп. свойств.
 	 *
 	 * @return array
 	 */
@@ -259,9 +258,9 @@ class Core_Entity_Observer_PropertiesTest extends PHPUnit_Framework_TestCase
 	}
 
 	/**
-	 * 
+	 * Данные для теста доп. свойств типа Интернет-магазин и Информационная система.
 	 *
-	 * @return
+	 * @return array
 	 */
 	public function dataRelationProperties()
 	{
@@ -281,6 +280,7 @@ class Core_Entity_Observer_PropertiesTest extends PHPUnit_Framework_TestCase
 	{
 		switch ($entityName)
 		{
+			// Товар
 			case 'Shop_Item':
 				$oShop = Core_Entity::factory('Shop');
 				$oShop->name = 'test shop';
@@ -297,6 +297,7 @@ class Core_Entity_Observer_PropertiesTest extends PHPUnit_Framework_TestCase
 				return $oShopItem;
 			break;
 
+			// Инфоэлемент
 			case 'Informationsystem_Item':
 				$oInformationsystem = Core_Entity::factory('Informationsystem');
 				$oInformationsystem->name = 'test informationsystem';
