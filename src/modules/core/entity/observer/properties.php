@@ -96,6 +96,61 @@ class Core_Entity_Observer_Properties
 
 		switch ($oProperty->type)
 		{
+			// Файл
+			case 2:
+				if (!isset($value['tmp_name'])) {
+					break;
+				}
+
+				$oPropertyValue->save();
+
+				$modelName = $oCoreEntity->getModelName();
+				$modelType = mb_substr($modelName, mb_stripos($modelName, '_') + 1);
+
+				$entityPath = $oCoreEntity->{"get{$modelType}Path"}();
+				$propertyFile = $modelName . '_property_file_' .
+					$oCoreEntity->id . '_' . $oPropertyValue->id .
+					'.' . Core_File::getExtension($value['tmp_name']);
+
+				$aParams = array();
+				$aParams['large_image_source'] = $value['tmp_name'];
+				$aParams['small_image_source'] = '';
+				$aParams['large_image_name'] = $value['name'];
+				$aParams['small_image_name'] = $value['name'];
+				$aParams['large_image_target'] = $entityPath . $propertyFile;
+				$aParams['small_image_target'] = $entityPath . 'small_' . $propertyFile;
+
+				$aParams['create_small_image_from_large'] = TRUE;
+
+				$aParams['large_image_max_width'] = $oProperty->image_large_max_width;
+				$aParams['large_image_max_height'] = $oProperty->image_large_max_height;
+				$aParams['small_image_max_width'] = $oProperty->image_small_max_width;
+				$aParams['small_image_max_height'] = $oProperty->image_small_max_height;
+				// $aParams['watermark_file_path'] = $oProperty->watermark_file_path;
+				// $aParams['watermark_position_x'] = $oProperty->watermark_position_x;
+				// $aParams['watermark_position_y'] = $oProperty->watermark_position_y;
+				// $aParams['large_image_watermark'] = $oProperty->large_image_watermark;
+				// $aParams['small_image_watermark'] = $oProperty->small_image_watermark;
+				// $aParams['large_image_isset'] = '';
+				// $aParams['large_image_preserve_aspect_ratio'] = '';
+				// $aParams['small_image_preserve_aspect_ratio'] = '';
+
+				$aResult = Core_File::adminUpload($aParams);
+
+				$oPropertyValue->file = $aResult['large_image'];
+				$oPropertyValue->file_small = $aResult['small_image'];
+
+				if ($aResult['large_image'])
+				{
+					$oPropertyValue->file = $propertyFile;
+				}
+
+				if ($aResult['small_image'])
+				{
+					$oPropertyValue->file_small = 'small_' . $propertyFile;
+				}
+			break;
+
 			// Инфоэлемент, товар
 			case 5:
 			case 12:
@@ -162,6 +217,16 @@ class Core_Entity_Observer_Properties
 					$aValues[] = strval($oPropertyValue->value);
 				break;
 
+				// Файл
+				case 2:
+					$oFileObject = new StdClass;
+					$oFileObject->file = $oPropertyValue->getLargeFileHref();
+					$oFileObject->file_small = $oPropertyValue->getSmallFileHref();
+					// $oFileObject->original = $oPropertyValue;
+
+					$aValues[] = $oFileObject;
+				break;
+
 				// Список
 				case 3:
 					$aValues[] = NULL;
@@ -201,10 +266,6 @@ class Core_Entity_Observer_Properties
 				// Товар
 				case 12:
 					$aValues[] = Core_Entity::factory('Shop_Item')->getById($oPropertyValue->value);
-				break;
-
-				case 2:
-					$aValues[] = NULL;
 				break;
 
 				default:

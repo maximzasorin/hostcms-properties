@@ -271,6 +271,159 @@ class Core_Entity_Observer_PropertiesTest extends PHPUnit_Framework_TestCase
 	}
 
 	/**
+	 * Тестирует файловое доп. свойство.
+	 *
+	 * @dataProvider dataFileProperty
+	 *
+	 * @param  string  $entityName
+	 * @return void
+	 */
+	public function testFileProperty($entityName, $hrefMethod)
+	{
+		$oEntity = $this->createEntity($entityName);
+		$propertyType = 2;
+
+		// defset => customget
+		$oProperty = $this->createProperty($oEntity, $propertyType);
+
+		$filename = strtolower($entityName) . '_property.png';
+
+		$oPropertyValue = $oProperty->createNewValue($oEntity->id);
+		$oPropertyValue->file = $filename;
+		$oPropertyValue->file_small = 'small_' . $filename;
+		$oPropertyValue->save();
+		$oPropertyValue->setHref($oEntity->{$hrefMethod}());
+
+		$actualValue = $oEntity->get($oProperty->tag_name);
+
+		$expectedValue = new StdClass;
+		$expectedValue->file = $oPropertyValue->getLargeFileHref();
+		$expectedValue->file_small = $oPropertyValue->getSmallFileHref();
+
+		$this->assertSame($expectedValue->file, $actualValue->file);
+		$this->assertSame($expectedValue->file_small, $actualValue->file_small);
+
+		$oProperty->delete();
+
+		// defset => customgetAll
+		$oProperty = $this->createProperty($oEntity, $propertyType);
+
+		$filename = strtolower($entityName) . '_property.png';
+		$filename2 = strtolower($entityName) . '_property2.png';
+
+		$oPropertyValue1 = $oProperty->createNewValue($oEntity->id);
+		$oPropertyValue1->file = $filename;
+		$oPropertyValue1->file_small = 'small_' . $filename;
+		$oPropertyValue1->save();
+		$oPropertyValue1->setHref($oEntity->{$hrefMethod}());
+
+		$oPropertyValue2 = $oProperty->createNewValue($oEntity->id);
+		$oPropertyValue2->file = $filename2;
+		$oPropertyValue2->file_small = 'small_' . $filename2;
+		$oPropertyValue2->save();
+		$oPropertyValue2->setHref($oEntity->{$hrefMethod}());
+
+		$aActualValue = $oEntity->getAll($oProperty->tag_name);
+
+		$aExpectedValue[0] = new StdClass;
+		$aExpectedValue[0]->file = $oPropertyValue1->getLargeFileHref();
+		$aExpectedValue[0]->file_small = $oPropertyValue1->getSmallFileHref();
+
+		$aExpectedValue[1] = new StdClass;
+		$aExpectedValue[1]->file = $oPropertyValue2->getLargeFileHref();
+		$aExpectedValue[1]->file_small = $oPropertyValue2->getSmallFileHref();
+
+		$this->assertSame($aExpectedValue[0]->file, $aActualValue[0]->file);
+		$this->assertSame($aExpectedValue[0]->file_small, $aActualValue[0]->file_small);
+		$this->assertSame($aExpectedValue[1]->file, $aActualValue[1]->file);
+		$this->assertSame($aExpectedValue[1]->file_small, $aActualValue[1]->file_small);
+
+		$oProperty->delete();
+
+
+		// customset => customget
+		$oProperty = $this->createProperty($oEntity, $propertyType);
+
+		$aCustomValues = array(
+			array(
+				'name' => 'test_file.png',
+				'type' => 'image/png',
+				'size' => filesize(__DIR__ . '/test_file.png'),
+				'tmp_name' => __DIR__ . '/test_file.png',
+				'error' => UPLOAD_ERR_OK,
+			),
+			array(),
+		);
+
+		$oEntity->set($oProperty->tag_name, $aCustomValues[0]);
+		$actualValue = $oEntity->get($oProperty->tag_name);
+
+		$this->assertSame(preg_match('/\.png$/', $actualValue->file), 1);
+		$this->assertSame(preg_match('/\.png$/', $actualValue->file_small), 1);
+
+		$oProperty->delete();
+
+
+		// customset => defget
+		$oProperty = $this->createProperty($oEntity, $propertyType);
+
+		$aCustomValues = array(
+			array(
+				'name' => 'test_file.png',
+				'type' => 'image/png',
+				'size' => filesize(__DIR__ . '/test_file.png'),
+				'tmp_name' => __DIR__ . '/test_file.png',
+				'error' => UPLOAD_ERR_OK,
+			),
+			array(),
+		);
+
+		$oEntity->set($oProperty->tag_name, $aCustomValues[0]);
+		$aoPropertyValues = $oEntity->getPropertyValues(FALSE, array($oProperty->id));
+
+		$this->assertTrue(count($aoPropertyValues) == 1);
+		$this->assertSame(preg_match('/\.png$/', $aoPropertyValues[0]->getLargeFileHref()), 1);
+		$this->assertSame(preg_match('/\.png$/', $aoPropertyValues[0]->getSmallFileHref()), 1);
+
+		$oProperty->delete();
+
+
+		// customset => customgetAll
+		$oProperty = $this->createProperty($oEntity, $propertyType);
+
+		$aCustomValues = array(
+			array(
+				'name' => 'test_file.png',
+				'type' => 'image/png',
+				'size' => filesize(__DIR__ . '/test_file.png'),
+				'tmp_name' => __DIR__ . '/test_file.png',
+				'error' => UPLOAD_ERR_OK,
+			),
+			array(),
+		);
+
+		$oEntity->set($oProperty->tag_name, $aCustomValues[0]);
+
+		$aActualValue = $oEntity->getAll($oProperty->tag_name);
+
+		$this->assertTrue(count($aActualValue) == 1);
+		$this->assertSame(preg_match('/\.png$/', $aActualValue[0]->file), 1);
+		$this->assertSame(preg_match('/\.png$/', $aActualValue[0]->file_small), 1);
+	}
+
+	/**
+	 * Данные для теста файлового доп. свойства.
+	 *
+	 * @return array
+	 */
+	public function dataFileProperty()
+	{
+		return array(
+			array('Shop_Item', 'getItemHref'),
+		);
+	}
+
+	/**
 	 * Создает сущность для теста.
 	 *
 	 * @param  string  $entityName
